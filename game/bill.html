@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Bill - Pembagi Tagihan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
+    <link rel="stylesheet" href="../assets/css/bill.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Aplikasi Split Bill
+        </h1>
+        <div class="input-group">
+            <label for="totalBill">Total Tagihan (IDR):</label>
+            <input type="text" id="totalBill" placeholder="Masukkan total tagihan">
+        </div>
+        <div id="peopleContainer"></div>
+        <button class="btn btn-add" onclick="addPerson()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            <span class="btn-text">Tambah Orang</span>
+        </button>
+        <div id="result" class="result"></div>
+
+
+        <footer>
+            <div class="footer-content">
+                <span class="created-by">Created by:</span>
+                <a href="https://github.com/RobithYusuf" target="_blank" rel="noopener noreferrer">
+                    <svg class="github-icon" viewBox="0 0 24 24">
+                        <path
+                            d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.301 24 12c0-6.627-5.373-12-12-12z">
+                        </path>
+                    </svg>
+                    RobithYusuf
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let peopleCount = 0;
+        const people = [];
+        let totalBillInput;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            totalBillInput = new AutoNumeric('#totalBill', {
+                currencySymbol: 'Rp ',
+                decimalCharacter: ',',
+                digitGroupSeparator: '.',
+                decimalPlaces: 0,
+                minimumValue: '0'
+            });
+
+            totalBillInput.domElement.addEventListener('input', updateCalculations);
+
+            // Add first person with 100%
+            addPerson(true);
+        });
+
+        function addPerson(isFirst = false) {
+            peopleCount++;
+            const person = {
+                id: peopleCount,
+                name: `Orang ${peopleCount}`,
+                percentage: isFirst ? 100 : 0
+            };
+            people.push(person);
+
+            const container = document.getElementById('peopleContainer');
+            const personDiv = document.createElement('div');
+            personDiv.className = 'person';
+            personDiv.innerHTML = `
+                <div class="person-header">
+                    <input type="text" id="name${person.id}" value="${person.name}" onchange="updateName(${person.id}, this.value)">
+                    <button class="btn btn-delete" onclick="removePerson(${person.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6L6 18M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <input type="range" id="slider${person.id}" min="0" max="100" value="${person.percentage}" class="slider" oninput="updatePercentage(${person.id}, this.value)">
+                <div class="person-footer">
+                    <span id="percentage${person.id}">${person.percentage}%</span>
+                    <span id="amount${person.id}" class="amount"></span>
+                </div>
+            `;
+            container.appendChild(personDiv);
+            if (!isFirst) {
+                redistributePercentages();
+            }
+            updateCalculations();
+        }
+
+        function updateName(id, newName) {
+            const person = people.find(p => p.id === id);
+            if (person) {
+                person.name = newName;
+                updateCalculations();
+            }
+        }
+
+        function updatePercentage(id, newPercentage) {
+            const person = people.find(p => p.id === id);
+            if (person) {
+                const oldPercentage = person.percentage;
+                person.percentage = parseInt(newPercentage);
+                const diff = person.percentage - oldPercentage;
+                document.getElementById(`percentage${id}`).textContent = `${person.percentage}%`;
+                redistributePercentages(id, diff);
+                updateCalculations();
+            }
+        }
+
+        function redistributePercentages(changedId = null, diff = 0) {
+            const totalPercentage = people.reduce((sum, person) => sum + person.percentage, 0);
+            const remainingPercentage = 100 - totalPercentage;
+
+            if (remainingPercentage !== 0) {
+                const unchangedPeople = people.filter(p => p.id !== changedId);
+                const totalUnchangedPercentage = unchangedPeople.reduce((sum, person) => sum + person.percentage, 0);
+
+                unchangedPeople.forEach(person => {
+                    if (totalUnchangedPercentage > 0) {
+                        const share = person.percentage / totalUnchangedPercentage;
+                        person.percentage += Math.round(remainingPercentage * share);
+                    } else {
+                        person.percentage += Math.round(remainingPercentage / unchangedPeople.length);
+                    }
+                    document.getElementById(`slider${person.id}`).value = person.percentage;
+                    document.getElementById(`percentage${person.id}`).textContent = `${person.percentage}%`;
+                });
+            }
+        }
+
+        function removePerson(id) {
+            const index = people.findIndex(p => p.id === id);
+            if (index !== -1 && people.length > 1) {
+                people.splice(index, 1);
+                const personDiv = document.querySelector(`#peopleContainer > div:nth-child(${index + 1})`);
+                personDiv.remove();
+                redistributePercentages();
+                updateCalculations();
+            } else {
+                alert("Harus ada minimal satu orang dalam pembagian tagihan.");
+            }
+        }
+
+       
+
+        function formatIDR(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function updateCalculations() {
+            const totalBill = Math.round(totalBillInput.getNumber());
+            let resultHTML = '<h2>Hasil Pembagian:</h2>';
+
+            people.forEach(person => {
+                const amount = Math.round((totalBill * person.percentage / 100) / 1000) * 1000;
+                resultHTML += `<p>${person.name}: ${formatIDR(amount)} (${person.percentage}%)</p>`;
+                document.getElementById(`amount${person.id}`).textContent = formatIDR(amount);
+            });
+
+            document.getElementById('result').innerHTML = resultHTML;
+        }
+    </script>
+</body>
+
+</html>
