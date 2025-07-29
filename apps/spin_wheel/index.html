@@ -1,39 +1,454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HIMATIF Spin Wheel</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="scripts.js" defer></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <title>Spin Wheels - Himatif JGU</title>
+
+    <link rel="icon" href="../../assets/images/logo-himatif.png" type="image/x-icon">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+
+    <link href="../../assets/css/font-awesome-all.css" rel="stylesheet">
+    <link href="../../assets/css/flaticon.css" rel="stylesheet">
+    <link href="../../assets/css/owl.css" rel="stylesheet">
+    <link href="../../assets/css/bootstrap.css" rel="stylesheet">
+    <link href="../../assets/css/jquery.fancybox.min.css" rel="stylesheet">
+    <link href="../../assets/css/animate.css" rel="stylesheet">
+    <link href="../../assets/css/nice-select.css" rel="stylesheet">
+    <link href="../../assets/css/odometer.css" rel="stylesheet">
+    <link href="../../assets/css/elpath.css" rel="stylesheet">
+    <link href="../../assets/css/color.css" id="jssDefault" rel="stylesheet">
+    <link href="../../assets/css/rtl.css" rel="stylesheet">
+    <link href="../../assets/css/style.css" rel="stylesheet">
+    <link href="../../assets/css/module-css/header.css" rel="stylesheet">
+    <link href="../../assets/css/module-css/page-title.css" rel="stylesheet">
+    <link href="../../assets/css/module-css/subscribe.css" rel="stylesheet">
+    <link href="../../assets/css/module-css/footer.css" rel="stylesheet">
+    <link href="../../assets/css/responsive.css" rel="stylesheet">
+
+    <style>
+        .control-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        .control-card h4 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1a273d;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .position-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .position-input-group input {
+            flex-grow: 1;
+        }
+        #positions-list, #results-list, #remaining-participants-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #positions-list li, #results-list li, #remaining-participants-list li {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+        }
+        #results-list li .position-name {
+            font-weight: 600;
+            color: #ff4500;
+        }
+        .remove-position-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .spin-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%; /* 1:1 Aspect Ratio */
+            margin: 0 auto;
+        }
+        #spin-wheel-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 8s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .spin-ticker {
+            position: absolute;
+            top: 50%;
+            right: -15px; /* Disesuaikan */
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+            border-right: 35px solid #ff4500;
+            z-index: 10;
+        }
+        #spin-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            border-color: #cccccc;
+        }
+        
+        /* Modal Styles - reused from before */
+        .winner-modal{display:none;position:fixed;z-index:1050;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.6)}.winner-modal-content{background-color:#fff;margin:15% auto;padding:40px;border:none;border-radius:15px;width:90%;max-width:500px;text-align:center;position:relative;animation:slide-down .5s ease-out}@keyframes slide-down{from{top:-200px;opacity:0}to{top:0;opacity:1}}.winner-modal-content h2{font-size:24px;color:#1a273d;margin-bottom:10px}.winner-modal-content #winner-name{font-size:36px;color:#ff4500;font-weight:700;margin-bottom:5px}.winner-modal-content #winner-position{font-size:22px;color:#1a273d;margin-bottom:20px;font-weight:400}.winner-modal-close{color:#aaa;position:absolute;top:15px;right:25px;font-size:35px;font-weight:bold;cursor:pointer}.confetti-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+    </style>
 </head>
+
 <body>
+    <div class="boxed_wrapper ltr">
+        <div class="loader-wrap"><div class="preloader"><div class="preloader-close"><i class="icon-27"></i></div><div id="handle-preloader" class="handle-preloader"><div class="animation-preloader"><div class="spinner"></div><div class="txt-loading"><span data-text-preloader="H" class="letters-loading">H</span><span data-text-preloader="I" class="letters-loading">I</span><span data-text-preloader="M" class="letters-loading">M</span><span data-text-preloader="A" class="letters-loading">A</span><span data-text-preloader="T" class="letters-loading">T</span><span data-text-preloader="I" class="letters-loading">I</span><span data-text-preloader="F" class="letters-loading">F</span></div></div></div></div></div>
+        <header class="main-header header-style-three"><div class="header-top"><div class="auto-container"><div class="top-inner"><ul class="info"><li><img src="../../assets/images/icons/icon-6.png" alt=""> Call: <a href="tel:+6282124986343">+62 821-2498-6343</a></li><li><img src="../../assets/images/icons/icon-7.png" alt=""> Mail: <a href="mailto:himatif.19@jgu.ac.id">himatif.19@jgu.ac.id</a></li></ul></div></div></div></header>
 
-    <!-- Header -->
-    <header>
-        <h1>HIMATIF Spin Wheel</h1>
-        <p>Boosting interaction through gamification.</p>
-    </header>
-
-    <!-- Main Content -->
-    <main>
-        <div class="wheel-container">
-            <div class="wheel" id="spinWheel">
-                <div class="segment" style="--i:0;">P1</div>
-                <div class="segment" style="--i:1;">P2</div>
-                <div class="segment" style="--i:2;">P3</div>
-                <div class="segment" style="--i:3;">P4</div>
-                <div class="segment" style="--i:4;">P5</div>
-                <div class="segment" style="--i:5;">P6</div>
+        <section class="page-title centred pt_110">
+            <div class="auto-container">
+                <div class="content-box">
+                    <h1>Spin Wheels Himatif JGU</h1>
+                    <ul class="bread-crumb clearfix">
+                        <li><a href="index.html">Himatif</a></li>
+                        <li>-</li>
+                        <li>JGU</li>
+                    </ul>
+                </div>
             </div>
-            <button id="spinButton">Spin the Wheel!</button>
+        </section>
+        <section class="spin-wheel-section pt_80 pb_120">
+            <div class="auto-container">
+                <div class="row clearfix">
+                    <div class="col-lg-7 col-md-12 col-sm-12">
+                        <div class="control-card">
+                            <div class="spin-container">
+                                <div class="spin-ticker"></div>
+                                <canvas id="spin-wheel-canvas" width="500" height="500"></canvas>
+                            </div>
+                        </div>
+                        <div class="control-card">
+                            <h4><i class="fas fa-trophy" style="color: #ffc107;"></i> Hasil Undian</h4>
+                            <ul id="results-list">
+                                <li id="no-results">Belum ada hasil.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 col-md-12 col-sm-12">
+                        <div class="control-card">
+                            <h4><i class="fas fa-briefcase"></i> Kelola Posisi</h4>
+                            <div class="position-input-group">
+                                <input type="text" id="position-input" class="form-control" placeholder="Cth: Ketua Pelaksana">
+                                <button id="add-position-btn" class="theme-btn btn-one" style="padding: 10px 20px;">Add</button>
+                            </div>
+                            <ul id="positions-list"></ul>
+                        </div>
+
+                        <div class="control-card">
+                            <h4><i class="fas fa-cogs"></i> Panel Kontrol</h4>
+                            <div class="form-group">
+                                <label>Pilih Posisi untuk Diputar <span>*</span></label>
+                                <select id="position-select" class="form-control"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Nama Peserta <span>* (satu per baris)</span></label>
+                                <textarea id="participants-input" class="form-control" placeholder="Andi Budiman&#10;Citra Lestari" style="min-height: 120px;"></textarea>
+                            </div>
+                            <div class="form-group message-btn">
+                                <button type="button" id="spin-button" class="theme-btn btn-one" style="width:100%;">Putar untuk Posisi Terpilih</button>
+                            </div>
+                        </div>
+
+                        <div class="control-card">
+                            <h4><i class="fas fa-users"></i> Sisa Peserta</h4>
+                            <ul id="remaining-participants-list">
+                                <li>Daftar peserta kosong.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div id="winner-modal" class="winner-modal">
+            <div class="winner-modal-content">
+                <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+                <span class="winner-modal-close">&times;</span>
+                <h2>Selamat!</h2>
+                <h3 id="winner-name"></h3>
+                <p id="winner-position"></p>
+            </div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2023 HIMATIF. All Rights Reserved.</p>
-    </footer>
+        <footer class="main-footer"><div class="widget-section p_relative pt_80 pb_100"><div class="auto-container"><div class="row clearfix"><div class="col-lg-4 col-md-6 col-sm-12 footer-column"><div class="footer-widget logo-widget mr_30"><figure class="footer-logo mb_20"><a href="index.html"><img src="../../assets/images/logo-himatif-jgu.png" alt=""></a></figure><p>HIMATIF JGU is the official student organization dedicated to developing potential, building networks, and driving innovation in technology for the Informatics Engineering students of Jakarta Global University.</p></div></div><div class="col-lg-2 col-md-4 col-sm-12 footer-column"><div class="footer-widget links-widget"><div class="widget-title"><h4>About Us</h4></div><div class="widget-content"><ul class="links-list clearfix"><li><a href="index.html">History</a></li><li><a href="index.html">Vision & Mission</a></li><li><a href="index.html">Our Structure</a></li><li><a href="index.html">The Cabinet</a></li></ul></div></div></div><div class="col-lg-2 col-md-4 col-sm-12 footer-column"><div class="footer-widget links-widget"><div class="widget-title"><h4>Activities</h4></div><div class="widget-content"><ul class="links-list clearfix"><li><a href="index.html">Programs</a></li><li><a href="index.html">Workshops & Training</a></li><li><a href="index.html">Competitions</a></li><li><a href="index.html">Event Gallery</a></li></ul></div></div></div><div class="col-lg-2 col-md-4 col-sm-12 footer-column"><div class="footer-widget links-widget"><div class="widget-title"><h4>Quick Links</h4></div><div class="widget-content"><ul class="links-list clearfix"><li><a href="about.html">Membership</a></li><li><a href="index.html">Blog & Articles</a></li><li><a href="index.html">Partnerships</a></li><li><a href="blog.html">Latest News</a></li></ul></div></div></div><div class="col-lg-2 col-md-4 col-sm-12 footer-column"><div class="footer-widget links-widget"><div class="widget-title"><h4>Support</h4></div><div class="widget-content"><ul class="links-list clearfix"><li><a href="contact.html">Contact Us</a></li><li><a href="faq.html">FAQ</a></li><li><a href="index.html">Secretariat Location</a></li><li><a href="index.html">Privacy Policy</a></li></ul></div></div></div></div></div></div><div class="footer-bottom"><div class="auto-container"><div class="bottom-inner"><div class="copyright"><p>Copyright &copy; 2024 <a href="index.html">HIMATIF Jakarta Global University</a> All rights reserved.</p></div><ul class="social-links"><li><h5>Follow Us On:</h5></li><li><a href="index.html"><i class="icon-22"></i></a></li><li><a href="index.html"><i class="icon-23"></i></a></li><li><a href="index.html"><i class="icon-24"></i></a></li><li><a href="index.html"><i class="icon-25"></i></a></li></ul></div></div></div></footer>
+        <div class="scroll-to-top"><svg class="scroll-top-inner" viewBox="-1 -1 102 102"><path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" /></svg></div>
+    </div>
 
+    <script src="../../assets/js/jquery.js"></script><script src="../../assets/js/bootstrap.min.js"></script><script src="../../assets/js/owl.js"></script><script src="../../assets/js/wow.js"></script><script src="../../assets/js/validation.js"></script><script src="../../assets/js/jquery.fancybox.js"></script><script src="../../assets/js/appear.js"></script><script src="../../assets/js/isotope.js"></script><script src="../../assets/js/parallax-scroll.js"></script><script src="../../assets/js/jquery.nice-select.min.js"></script><script src="../../assets/js/scrolltop.min.js"></script><script src="../../assets/js/gsap.js"></script><script src="../../assets/js/ScrollTrigger.js"></script><script src="../../assets/js/SplitText.js"></script><script src="../../assets/js/language.js"></script><script src="../../assets/js/jquery-ui.js"></script><script src="../../assets/js/lenis.min.js"></script><script src="../../assets/js/odometer.js"></script><script src="../../assets/js/jquery.lettering.min.js"></script><script src="../../assets/js/jquery.circleType.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="../../assets/js/script.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            let state = {
+                participants: [],
+                positions: [],
+                results: [],
+                currentRotation: 0,
+            };
+
+            // --- DOM ELEMENTS ---
+            const dom = {
+                canvas: document.getElementById('spin-wheel-canvas'),
+                spinButton: document.getElementById('spin-button'),
+                participantsInput: document.getElementById('participants-input'),
+                remainingList: document.getElementById('remaining-participants-list'),
+                positionInput: document.getElementById('position-input'),
+                addPositionBtn: document.getElementById('add-position-btn'),
+                positionsList: document.getElementById('positions-list'),
+                positionSelect: document.getElementById('position-select'),
+                resultsList: document.getElementById('results-list'),
+                modal: document.getElementById('winner-modal'),
+                winnerNameEl: document.getElementById('winner-name'),
+                winnerPositionEl: document.getElementById('winner-position'),
+                closeModal: document.getElementsByClassName('winner-modal-close')[0]
+            };
+            
+            const ctx = dom.canvas.getContext('2d');
+            const colors = ["#ff6b6b", "#feca57", "#48dbfb", "#1dd1a1", "#f368e0", "#ff9f43", "#0abde3", "#10ac84", "#54a0ff", "#ee5253"];
+
+            // --- RENDER FUNCTIONS ---
+            const renderAll = () => {
+                renderPositions();
+                renderRemainingParticipants();
+                renderResults();
+                drawWheel();
+                checkSpinButtonState();
+            };
+
+            const renderPositions = () => {
+                dom.positionsList.innerHTML = '';
+                dom.positionSelect.innerHTML = '<option value="">-- Pilih Posisi --</option>';
+
+                if (state.positions.length === 0) {
+                    dom.positionsList.innerHTML = '<li>Belum ada posisi ditambahkan.</li>';
+                }
+
+                state.positions.forEach((pos, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${pos.name} ${pos.filled ? ' (Terisi)' : ''}</span>
+                                    <button class="remove-position-btn" data-index="${index}">&times;</button>`;
+                    if(pos.filled) li.style.opacity = '0.5';
+                    dom.positionsList.appendChild(li);
+
+                    if (!pos.filled) {
+                        const option = document.createElement('option');
+                        option.value = pos.name;
+                        option.textContent = pos.name;
+                        dom.positionSelect.appendChild(option);
+                    }
+                });
+                
+                $(dom.positionSelect).niceSelect('update');
+            };
+
+            const renderRemainingParticipants = () => {
+                dom.remainingList.innerHTML = '';
+                if (state.participants.length === 0) {
+                    dom.remainingList.innerHTML = '<li>Daftar peserta kosong.</li>';
+                    return;
+                }
+                state.participants.forEach(p => {
+                    const li = document.createElement('li');
+                    li.textContent = p;
+                    dom.remainingList.appendChild(li);
+                });
+            };
+
+            const renderResults = () => {
+                dom.resultsList.innerHTML = '';
+                if (state.results.length === 0) {
+                    dom.resultsList.innerHTML = '<li id="no-results">Belum ada hasil.</li>';
+                    return;
+                }
+                state.results.forEach(r => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<div><span class="position-name">${r.position}:</span> ${r.name}</div>`;
+                    dom.resultsList.appendChild(li);
+                });
+            };
+
+            const drawWheel = () => {
+                const participants = state.participants;
+                const numParticipants = participants.length;
+                const centerX = dom.canvas.width / 2;
+                const centerY = dom.canvas.height / 2;
+                
+                ctx.clearRect(0, 0, dom.canvas.width, dom.canvas.height);
+                
+                if (numParticipants === 0) {
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = '20px Outfit';
+                    ctx.fillStyle = '#aaa';
+                    ctx.fillText('Tambahkan Peserta', centerX, centerY);
+                    ctx.restore();
+                    return;
+                }
+
+                const arcSize = 2 * Math.PI / numParticipants;
+                const radius = centerX - 10;
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                
+                for (let i = 0; i < numParticipants; i++) {
+                    const angle = i * arcSize;
+                    ctx.beginPath();
+                    ctx.fillStyle = colors[i % colors.length];
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, radius, angle, angle + arcSize);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.save();
+                    ctx.rotate(angle + arcSize / 2);
+                    ctx.textAlign = 'right';
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '16px Outfit';
+                    const name = participants[i].length > 15 ? participants[i].substring(0, 13) + '...' : participants[i];
+                    ctx.fillText(name, radius - 15, 5);
+                    ctx.restore();
+                }
+                ctx.restore();
+            };
+            
+            const checkSpinButtonState = () => {
+                const availablePositions = state.positions.some(p => !p.filled);
+                const hasParticipants = state.participants.length > 0;
+                dom.spinButton.disabled = !(availablePositions && hasParticipants);
+            };
+
+            // --- EVENT LISTENERS ---
+            dom.addPositionBtn.addEventListener('click', () => {
+                const newPosition = dom.positionInput.value.trim();
+                if (newPosition) {
+                    state.positions.push({ name: newPosition, filled: false });
+                    dom.positionInput.value = '';
+                    renderAll();
+                }
+            });
+
+            // ======================================================================
+            // ===== TAMBAHAN: Event listener untuk tombol Enter di input posisi ====
+            // ======================================================================
+            dom.positionInput.addEventListener('keydown', (event) => {
+                // Cek jika tombol yang ditekan adalah 'Enter'
+                if (event.key === 'Enter') {
+                    // Mencegah aksi default dari Enter (seperti submit form)
+                    event.preventDefault(); 
+                    // Memicu klik pada tombol 'Add' secara virtual
+                    dom.addPositionBtn.click(); 
+                }
+            });
+
+            dom.positionsList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-position-btn')) {
+                    const index = e.target.getAttribute('data-index');
+                    state.positions.splice(index, 1);
+                    renderAll();
+                }
+            });
+
+            dom.participantsInput.addEventListener('input', () => {
+                const rawInput = dom.participantsInput.value;
+                state.participants = rawInput.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+                renderAll();
+            });
+
+            dom.spinButton.addEventListener('click', () => {
+                const selectedPosition = dom.positionSelect.value;
+                if (!selectedPosition) {
+                    alert('Silakan pilih posisi yang akan diundi terlebih dahulu.');
+                    return;
+                }
+                if(state.participants.length < 1){
+                    alert('Tidak ada peserta untuk diputar.');
+                    return;
+                }
+
+                dom.spinButton.disabled = true;
+                
+                const spinDuration = 8000;
+                const randomSpins = Math.random() * 5 + 5;
+                const stopAngle = Math.random() * 2 * Math.PI;
+                const totalRotation = state.currentRotation + (randomSpins * 2 * Math.PI) + stopAngle;
+
+                dom.canvas.style.transition = `transform ${spinDuration / 1000}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                dom.canvas.style.transform = `rotate(${totalRotation}rad)`;
+                
+                setTimeout(() => {
+                    dom.canvas.style.transition = 'none';
+                    state.currentRotation = totalRotation % (2 * Math.PI);
+                    
+                    const numParticipants = state.participants.length;
+                    const arcSize = 2 * Math.PI / numParticipants;
+                    const finalAngle = (2 * Math.PI) - state.currentRotation;
+                    let winnerIndex = Math.floor(finalAngle / arcSize) % numParticipants;
+
+                    const winner = state.participants[winnerIndex];
+                    
+                    // --- Update State ---
+                    state.results.push({ position: selectedPosition, name: winner });
+                    const posIndex = state.positions.findIndex(p => p.name === selectedPosition);
+                    if (posIndex > -1) state.positions[posIndex].filled = true;
+                    state.participants.splice(winnerIndex, 1);
+                    
+                    dom.participantsInput.value = state.participants.join('\n');
+                    
+                    // Re-render UI
+                    renderAll();
+
+                    // Show Modal
+                    dom.winnerNameEl.textContent = winner;
+                    dom.winnerPositionEl.textContent = `Terpilih sebagai ${selectedPosition}`;
+                    dom.modal.style.display = 'block';
+
+                    const confettiCanvas = document.getElementById('confetti-canvas');
+                    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+                    myConfetti({ particleCount: 200, spread: 160, origin: { y: 0.6 } });
+
+                }, spinDuration);
+            });
+
+            // Modal close logic
+            dom.closeModal.onclick = () => dom.modal.style.display = "none";
+            window.onclick = (event) => { if (event.target == dom.modal) dom.modal.style.display = "none" };
+            
+            // --- INITIALIZATION ---
+            renderAll();
+        });
+    </script>
 </body>
 </html>
