@@ -137,16 +137,16 @@
                                 <i class="icon-bar"></i>
                                 <i class="icon-bar"></i>
                             </div>
-                            <nav class="main-menu navbar-expand-md navbar-light clearfix">
+                            <nav id="navbar" class="main-menu navbar-expand-md navbar-light clearfix">
                                 <div class="collapse navbar-collapse show clearfix" id="navbarSupportedContent">
-                                    <ul class="navigation clearfix">
-                                        <li><a href="#home">Home</a></li> 
-                                        <li><a href="#about">About</a></li>
-                                        <li><a href="#history">History</a></li> 
-                                        <li><a href="#foundation">Foundation</a></li> 
-                                        <li><a href="#team">Team</a></li>
-                                        <li><a href="#blog">Blog</a></li>
-                                        <li><a href="#contact">Contact</a></li> 
+                                    <ul class="navigation">
+                                        <li><a href="#home" class="nav-link scrollto active">Home</a></li>
+                                        <li><a href="#about" class="nav-link scrollto">About</a></li>
+                                        <li><a href="#history" class="nav-link scrollto">History</a></li>
+                                        <li><a href="#foundation" class="nav-link scrollto">Foundation</a></li>
+                                        <li><a href="#team" class="nav-link scrollto">Team</a></li>
+                                        <li><a href="#blog" class="nav-link scrollto">Blog</a></li>
+                                        <li><a href="#contact" class="nav-link scrollto">Contact</a></li>
                                     </ul>
                                 </div>
                             </nav>
@@ -625,7 +625,7 @@
 
 
         <!-- industries-section -->
-        <section id="team" class="industries-section pt_20 pb_120">
+        <section id="team" class="industries-section pt_120 pb_70">
             <div class="auto-container">
                 <div class="sec-title centred pb_60 sec-title-animation animation-style2">
                     <span class="sub-title mb_10 title-animation">Meet Our Team</span>
@@ -695,13 +695,8 @@
         <!-- industries-section end -->
 
 
-        <!-- process-section -->
-        
-        <!-- process-section -->
-
-
         <!-- team-section -->
-        <section id="team" class="team-section centred pt_10 pb_70">
+        <section class="team-section centred pt_30 pb_70">
             <div class="auto-container">
                 <div class="sec-title pb_60 sec-title-animation animation-style2">
                     <span class="sub-title mb_10 title-animation">Our Leadership Structure</span>
@@ -880,6 +875,7 @@
         </section>
         <!-- team-section end -->
 
+        <!-- process-section -->
         <section class="process-section pt_120 pb_90">
             <div class="pattern-layer" style="background-image: url(assets/images/shape/shape-3.png);"></div>
             <div class="auto-container">
@@ -959,6 +955,7 @@
                 </div>
             </div>
         </section>
+        <!-- process-section -->
 
         <!-- news-section -->
         <section id="blog" class="news-section pt_120 pb_90">
@@ -1244,6 +1241,26 @@
     <script>
         // Initialize Feather Icons
         feather.replace();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const scrolltoLinks = document.querySelectorAll('.scrollto');
+
+            scrolltoLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); // Mencegah perilaku default dari tautan
+
+                    let targetId = this.getAttribute('href');
+                    let targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
     </script>
 </body><!-- End of .page_wrapper -->
 </html>
